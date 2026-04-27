@@ -79,10 +79,10 @@
 
         #arrow {
             position: absolute;
-            width: 50px;
-            height: 50px;
-            margin-left: -25px;
-            margin-top: -25px;
+            width: 100px;
+            height: 100px;
+            margin-left: -50px;
+            margin-top: -50px;
             /* Fancy SVG arrow matching the aesthetic */
             background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234a3123"><path d="M12 2L4 10h5v12h6V10h5L12 2z"/></svg>') center/contain no-repeat;
             opacity: 1;
@@ -140,16 +140,17 @@
         /* Footprint Animations */
         .footprint {
             position: absolute;
-            width: 20px;
-            height: 40px;
+            width: 40px;
+            height: 80px;
             transform-origin: center center;
+            filter: drop-shadow(0px 0px 5px rgba(255,255,255,0.9));
         }
 
         .footprint-svg {
             width: 100%;
             height: 100%;
             opacity: 0;
-            animation: footprintFade 8s forwards;
+            animation: footprintFade 20s forwards;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -157,9 +158,32 @@
 
         @keyframes footprintFade {
             0% { opacity: 0; transform: scale(0.8); }
-            10% { opacity: 0.8; transform: scale(1); }
-            70% { opacity: 0.8; }
+            5% { opacity: 0.8; transform: scale(1); }
+            80% { opacity: 0.8; }
             100% { opacity: 0; }
+        }
+
+        /* Wrong Way Message */
+        #wrong-way-msg {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(60, 36, 21, 0.9);
+            color: #e9dfce;
+            padding: 15px 25px;
+            border-radius: 8px;
+            border: 2px solid #2a180c;
+            font-size: 20px;
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 2000;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .show-wrong-way #wrong-way-msg {
+            opacity: 1;
         }
     </style>
 </head>
@@ -185,11 +209,18 @@
         </div>
     </div>
 
+    <div id="wrong-way-msg">You're facing the wrong way, head up!</div>
+
     <script>
         // Setup state variables
         const EARTH_RADIUS = 6378137; // in meters
         const SCALE = 45; // Map scale: 1 real-world meter = 45 pixels
         const STEP_DISTANCE = 20; // Drop a footprint every 20 map-pixels
+
+        // Destination map coordinates
+        const DEST_X = 1655;
+        const DEST_Y = 1252;
+        let isWrongWay = false;
 
         let startLat = null, startLon = null;
         
@@ -294,24 +325,46 @@
             isLeftFoot = !isLeftFoot;
             
             // Cleanup DOM
-            setTimeout(() => { footprint.remove(); }, 8000);
+            setTimeout(() => { footprint.remove(); }, 20000);
         }
 
         function updateArrow() {
-            const distToStart = Math.hypot(targetEast, targetNorth);
+            // Find map coordinates of current position
+            const currentMapX = 2062 - (targetNorth * SCALE);
+            const currentMapY = 3364 - (targetEast * SCALE);
             
-            // Distance Check for Start Area Effects
-            if (distToStart < 10) {
-                document.body.classList.add('close-to-start');
-            } else {
-                document.body.classList.remove('close-to-start');
-            }
-
-            let bearingToStart = Math.atan2(-targetEast, -targetNorth) * 180 / Math.PI;
-            if (bearingToStart < 0) bearingToStart += 360;
+            // Arrow points towards DEST_X (1655) and DEST_Y (1252)
+            const destDiffX = currentMapX - DEST_X; // + means dest is above
+            const destDiffY = currentMapY - DEST_Y; // + means dest is left
             
-            let relativeAngle = bearingToStart - visualHeading;
+            // Re-calculate bearing from X/Y mapping
+            // Map: North corresponds to -X, East corresponds to -Y.
+            const dNorth = currentMapX - DEST_X; 
+            const dEast = currentMapY - DEST_Y;
+            
+            let bearingToDest = Math.atan2(dEast, dNorth) * 180 / Math.PI;
+            if (bearingToDest < 0) bearingToDest += 360;
+            
+            let relativeAngle = bearingToDest - visualHeading;
+            // Normalize relativeAngle to -180 to 180
+            while (relativeAngle <= -180) relativeAngle += 360;
+            while (relativeAngle > 180) relativeAngle -= 360;
+            
             const relRad = relativeAngle * Math.PI / 180;
+            
+            // Wrong way threshold logic
+            const absRelAngle = Math.abs(relativeAngle);
+            if (absRelAngle > 135) { // Threshold to turn ON wrong way message
+                if (!isWrongWay) {
+                    isWrongWay = true;
+                    document.body.classList.add('show-wrong-way');
+                }
+            } else if (absRelAngle < 100) { // Threshold to turn OFF wrong way message
+                if (isWrongWay) {
+                    isWrongWay = false;
+                    document.body.classList.remove('show-wrong-way');
+                }
+            }
             
             // Calculate arrow intersection at the edge of the screen
             const padding = 50;
