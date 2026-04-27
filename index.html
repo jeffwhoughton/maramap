@@ -51,6 +51,7 @@
 
         /* Flame Border */
         #flame-border {
+            display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             pointer-events: none;
@@ -106,7 +107,7 @@
         }
 
         .map-wrapper {
-            transform: rotateX(55deg);
+            transform: rotateX(40deg) scale(0.6);
             transform-style: preserve-3d;
             width: 100vw;
             height: 100vh;
@@ -344,7 +345,7 @@
             const container = document.getElementById('map-container');
             // Offset logic moves exact center point under crosshairs and rotates on it.
             container.style.transformOrigin = `${mapX}px ${mapY}px`;
-            container.style.transform = `translate(${-mapX}px, ${-mapY}px) rotate(${mapRot}deg)`;
+            container.style.transform = `translate(${-mapX}px, ${-mapY}px)`;
             
             let distFromLast = Math.hypot(mapX - lastStepX, mapY - lastStepY);
             if (distFromLast > STEP_DISTANCE) {
