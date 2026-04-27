@@ -107,7 +107,7 @@
         }
 
         .map-wrapper {
-            transform: rotateX(40deg) scale(0.6);
+            transform: rotateX(40deg) scale(0.4);
             transform-style: preserve-3d;
             width: 100vw;
             height: 100vh;
@@ -188,7 +188,7 @@
     <script>
         // Setup state variables
         const EARTH_RADIUS = 6378137; // in meters
-        const SCALE = 15; // Map scale: 1 real-world meter = 15 pixels
+        const SCALE = 45; // Map scale: 1 real-world meter = 45 pixels
         const STEP_DISTANCE = 20; // Drop a footprint every 20 map-pixels
 
         let startLat = null, startLon = null;
@@ -201,7 +201,7 @@
         let visualHeading = 90;
 
         let lastCalcE, lastCalcN;
-        let lastStepX = 960, lastStepY = 1610;
+        let lastStepX = 2062, lastStepY = 3364;
         let isLeftFoot = true;
 
         // Linear interpolation helpers
@@ -332,14 +332,14 @@
 
         function updateVisuals() {
             // Smooth values
-            visualEast = lerp(visualEast, targetEast, 0.05);
-            visualNorth = lerp(visualNorth, targetNorth, 0.05);
-            visualHeading = lerp(visualHeading, targetHeading, 0.05);
+            visualEast = lerp(visualEast, targetEast, 0.2);
+            visualNorth = lerp(visualNorth, targetNorth, 0.2);
+            visualHeading = lerp(visualHeading, targetHeading, 0.2);
             
             // Coordinates translation mappings:
             // Since East is Top, map Y updates on East shift. North is Left, map X updates on North shift.
-            const mapX = 960 - (visualNorth * SCALE);
-            const mapY = 1610 - (visualEast * SCALE);
+            const mapX = 2062 - (visualNorth * SCALE);
+            const mapY = 3364 - (visualEast * SCALE);
             const mapRot = visualHeading - 90;
             
             const container = document.getElementById('map-container');
