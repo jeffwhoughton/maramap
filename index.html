@@ -73,16 +73,16 @@
             left: 50%;
             width: 0;
             height: 0;
-            z-index: 3000;
+            z-index: 1500;
             pointer-events: none;
         }
 
         #arrow {
             position: absolute;
-            width: 100px;
-            height: 100px;
-            margin-left: -50px;
-            margin-top: -50px;
+            width: 50px;
+            height: 50px;
+            margin-left: -25px;
+            margin-top: -25px;
             /* Fancy SVG arrow matching the aesthetic */
             background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234a3123"><path d="M12 2L4 10h5v12h6V10h5L12 2z"/></svg>') center/contain no-repeat;
             opacity: 1;
@@ -140,8 +140,8 @@
         /* Footprint Animations */
         .footprint {
             position: absolute;
-            width: 40px;
-            height: 80px;
+            width: 80px;
+            height: 160px;
             transform-origin: center center;
             filter: drop-shadow(0px 0px 5px rgba(255,255,255,0.9));
         }
@@ -347,7 +347,7 @@
             let bearingToDest = Math.atan2(dEast, dNorth) * 180 / Math.PI;
             if (bearingToDest < 0) bearingToDest += 360;
             
-            let relativeAngle = bearingToDest - visualHeading;
+            let relativeAngle = bearingToDest;
             // Normalize relativeAngle to -180 to 180
             while (relativeAngle <= -180) relativeAngle += 360;
             while (relativeAngle > 180) relativeAngle -= 360;
@@ -395,12 +395,12 @@
             // Since East is Top, map Y updates on East shift. North is Left, map X updates on North shift.
             const mapX = 2062 - (visualNorth * SCALE);
             const mapY = 3364 - (visualEast * SCALE);
-            const mapRot = visualHeading - 90;
             
             const container = document.getElementById('map-container');
             // Offset logic moves exact center point under crosshairs and rotates on it.
             container.style.transformOrigin = `${mapX}px ${mapY}px`;
-            container.style.transform = `translate(${-mapX}px, ${-mapY}px)`;
+            // Add map rotation into the transform based on visualHeading
+            container.style.transform = `translate(${-mapX}px, ${-mapY}px) rotate(${visualHeading - 90}deg)`;
             
             let distFromLast = Math.hypot(mapX - lastStepX, mapY - lastStepY);
             if (distFromLast > STEP_DISTANCE) {
