@@ -73,7 +73,7 @@
             left: 50%;
             width: 0;
             height: 0;
-            z-index: 500;
+            z-index: 3000;
             pointer-events: none;
         }
 
@@ -179,7 +179,9 @@
             transition: opacity 0.5s;
             z-index: 2000;
             pointer-events: none;
-            white-space: nowrap;
+            width: 80%;
+            max-width: 320px;
+            text-align: center;
         }
 
         .show-wrong-way #wrong-way-msg {
@@ -187,7 +189,7 @@
         }
     </style>
 </head>
-<body class="close-to-start">
+<body>
 
     <div id="loading">
         <div id="loading-text">I solemnly swear that I am up to no good.</div>
