@@ -227,6 +227,8 @@
     </div>
     
     <div id="toast">Wrong Way</div>
+    
+    <div id="status-letter" style="position: absolute; top: 20px; right: 20px; font-size: 32px; color: #492210; font-weight: bold; z-index: 100; opacity: 0; transition: opacity 1s ease; pointer-events: none; text-shadow: 2px 2px 4px #f5dbbc, -2px -2px 4px #f5dbbc, 2px -2px 4px #f5dbbc, -2px 2px 4px #f5dbbc;"></div>
 
     <script>
         // System Config
@@ -258,6 +260,7 @@
             let bgMusic = document.getElementById('bg-music');
             if (bgMusic) {
                 bgMusic.volume = 0.5; // Default volume
+                bgMusic.loop = true; // Loop the music forever
                 bgMusic.play().catch(e => console.warn('Audio playback failed:', e));
             }
         }
@@ -351,7 +354,44 @@
                     pos => {
                         let lat = pos.coords.latitude;
                         let lon = pos.coords.longitude;
-                        if (!firstPos) firstPos = { lat, lon };
+                        if (!firstPos) {
+                            const B_LAT = 45.03777754294026, B_LON = -78.48257497380403;
+                            const J_LAT = 44.6223661518286, J_LON = -79.49627584749986;
+                            
+                            function getDistance(lat1, lon1, lat2, lon2) {
+                                const R = 6371e3;
+                                const p1 = lat1 * Math.PI/180;
+                                const p2 = lat2 * Math.PI/180;
+                                const dp = (lat2-lat1) * Math.PI/180;
+                                const dl = (lon2-lon1) * Math.PI/180;
+                                const a = Math.sin(dp/2) * Math.sin(dp/2) +
+                                          Math.cos(p1) * Math.cos(p2) *
+                                          Math.sin(dl/2) * Math.sin(dl/2);
+                                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                                return R * c;
+                            }
+                            
+                            let distB = getDistance(lat, lon, B_LAT, B_LON);
+                            let distJ = getDistance(lat, lon, J_LAT, J_LON);
+                            let displayLetter = 'N';
+                            
+                            if (distB <= 500) {
+                                firstPos = { lat: B_LAT, lon: B_LON };
+                                displayLetter = 'B';
+                            } else if (distJ <= 500) {
+                                firstPos = { lat: J_LAT, lon: J_LON };
+                                displayLetter = 'J';
+                            } else {
+                                firstPos = { lat, lon };
+                            }
+                            
+                            let statusEl = document.getElementById('status-letter');
+                            if (statusEl) {
+                                statusEl.innerText = displayLetter;
+                                statusEl.style.opacity = 1;
+                                setTimeout(() => { statusEl.style.opacity = 0; }, 5000);
+                            }
+                        }
 
                         // Deltas in degrees mapping to meters
                         let dLat = lat - firstPos.lat;
@@ -490,34 +530,32 @@
 
             // 4. Arrow Navigation
             let arrow = document.getElementById('arrow');
-            
-            // Arrow's targeting logic
-            let ARROW_DEST_X = DEST_X;
-            let ARROW_DEST_Y = DEST_Y;
+        let destMarkerEl = document.getElementById('dest-marker');
+        
+        // Get exact 2D screen coordinates of the destination marker's center
+        let destMarkerRect = destMarkerEl.getBoundingClientRect();
+        let destScreenX = destMarkerRect.left + destMarkerRect.width / 2;
+        let destScreenY = destMarkerRect.top + destMarkerRect.height / 2;
 
-            let dX = ARROW_DEST_X - map_x;
-            let dY = ARROW_DEST_Y - map_y;
-            let angle = Math.atan2(dY * PITCH_COS, dX); 
-            
-            let arrW = visibleW / 2 - 50;
-            let arrH = visibleH / 2 - 50;
+        let screenDx = destScreenX - visibleW / 2;
+        let screenDy = destScreenY - visibleH / 2;
+        let angle = Math.atan2(screenDy, screenDx); 
+        
+        let arrW = visibleW / 2 - 50;
+        let arrH = visibleH / 2 - 50;
 
-            let absCos = Math.abs(Math.cos(angle));
-            let absSin = Math.abs(Math.sin(angle));
-            let edgeMag = Math.min(arrW / absCos, arrH / absSin);
+        let absCos = Math.max(0.001, Math.abs(Math.cos(angle)));
+        let absSin = Math.max(0.001, Math.abs(Math.sin(angle)));
+        let edgeMag = Math.min(arrW / absCos, arrH / absSin);
 
-            // Screen intersection (accounting for scale and pitch)
-            let screenDx = dX * SCALE;
-            let screenDy = dY * SCALE * PITCH_COS;
-            let targetMag = Math.hypot(screenDx, screenDy);
+        let targetMag = Math.hypot(screenDx, screenDy);
 
-            // Distance from center is capped at the edge.
-            // If the target comes on screen, the arrow moves inward towards it.
-            // We subtract enough from the target magnitude so the arrow hits the edge of the X instead of overlapping its center.
-            let renderMag = Math.min(edgeMag, Math.max(0, targetMag - 50));
-
-            let baseArrowX = visibleW / 2 + Math.cos(angle) * renderMag;
-            let baseArrowY = visibleH / 2 + Math.sin(angle) * renderMag;
+        // Distance from center is capped at the edge.
+        // If the target comes on screen, the arrow moves inward towards it.
+        // We subtract enough from the target magnitude so the arrow hits the edge of the X instead of overlapping its center.
+        let renderMag = Math.min(edgeMag, Math.max(0, targetMag - 65));
+        let baseArrowX = visibleW / 2 + Math.cos(angle) * renderMag;
+        let baseArrowY = visibleH / 2 + Math.sin(angle) * renderMag;
 
             // Avoid text labels
             let targetOffsetX = 0;
