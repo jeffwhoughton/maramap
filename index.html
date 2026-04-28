@@ -232,8 +232,16 @@
 
     <script>
         // System Config
+        const DEBUG_MODE = false;
         const INITIAL_X = 2034;
         const INITIAL_Y = 3720;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!DEBUG_MODE) {
+                const testBtn = document.getElementById('test-button');
+                if (testBtn) testBtn.style.display = 'none';
+            }
+        });
         const DEST_X = 1655;
         const DEST_Y = 1252;
         const PIXELS_PER_METER = 45;
@@ -386,7 +394,7 @@
                             }
                             
                             let statusEl = document.getElementById('status-letter');
-                            if (statusEl) {
+                            if (statusEl && DEBUG_MODE) {
                                 statusEl.innerText = displayLetter;
                                 statusEl.style.opacity = 1;
                                 setTimeout(() => { statusEl.style.opacity = 0; }, 5000);
