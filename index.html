@@ -188,8 +188,8 @@
 
     <script>
         // System Config
-        const INITIAL_X = 2062;
-        const INITIAL_Y = 3364;
+        const INITIAL_X = 2034;
+        const INITIAL_Y = 3720;
         const DEST_X = 1655;
         const DEST_Y = 1252;
         const PIXELS_PER_METER = 45;
@@ -418,7 +418,7 @@
             
             // Offset the destination specifically for the arrow's targeting logic (down 100 pixels)
             let ARROW_DEST_X = DEST_X;
-            let ARROW_DEST_Y = DEST_Y + 200;
+            let ARROW_DEST_Y = DEST_Y + 150;
 
             let dX = ARROW_DEST_X - map_x;
             let dY = ARROW_DEST_Y - map_y;
@@ -448,8 +448,8 @@
             arrow.style.transform = `rotate(${arrowDeg}deg)`;
 
             // Fade out as destination gets closer to the center of the screen
-            if (targetMag < 200) {
-                arrow.style.opacity = Math.max(0, targetMag / 200);
+            if (targetMag < 250) {
+                arrow.style.opacity = Math.max(0, targetMag / 250);
             } else {
                 arrow.style.opacity = 1;
             }
