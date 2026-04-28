@@ -3,436 +3,401 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Harry Potter Marauders Map</title>
+    <title>Marauder's Map</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">
     <style>
         body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh;
             overflow: hidden;
-            background-color: #d8cbb8;
-            font-family: 'Georgia', serif;
+            background-color: #f0cfa6;
+            font-family: 'Cinzel', 'Georgia', serif;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
-        /* Loading Screen */
-        #loading {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, #e9dfce 0%, #c1ab8e 100%);
-            color: #3c2415;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            font-size: 24px;
-            text-align: center;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        #start-btn {
-            padding: 15px 30px;
-            font-size: 20px;
-            background: #3c2415;
-            color: #e9dfce;
-            border: 2px solid #2a180c;
-            border-radius: 5px;
-            margin-top: 30px;
-            cursor: pointer;
-            font-family: 'Georgia', serif;
-            transition: transform 0.2s;
-        }
-
-        #start-btn:active {
-            transform: scale(0.95);
-        }
-
-        /* Flame Border */
-        #flame-border {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            pointer-events: none;
-            background-image: url('flame.webp');
-            background-size: 100% 100%;
-            opacity: 0;
-            transition: opacity 2s ease-in-out;
-            z-index: 1000;
-        }
-
-        .close-to-start #flame-border {
-            opacity: 1;
-        }
-
-        /* Directional Arrow */
-        #arrow-container {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            z-index: 1500;
-            pointer-events: none;
-        }
-
-        #arrow {
-            position: absolute;
-            width: 50px;
-            height: 50px;
-            margin-left: -25px;
-            margin-top: -25px;
-            /* Fancy SVG arrow matching the aesthetic */
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234a3123"><path d="M12 2L4 10h5v12h6V10h5L12 2z"/></svg>') center/contain no-repeat;
-            opacity: 1;
-            transition: opacity 1s;
-            filter: drop-shadow(0px 0px 5px rgba(255,255,255,0.8));
-        }
-
-        .close-to-start #arrow {
-            opacity: 0;
-        }
-
-        /* 3D Pitched Scene */
-        .pitch-container {
-            width: 100vw;
-            height: 100vh;
+        /* 3D Pitched Perspective */
+        #map-container {
             perspective: 800px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            z-index: 1;
-        }
-
-        .map-wrapper {
-            transform: rotateX(40deg) scale(0.4);
-            transform-style: preserve-3d;
             width: 100vw;
             height: 100vh;
             position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
         }
 
-        #map-container {
+        #map-layer {
             position: absolute;
-            width: 4092px;
-            height: 6120px;
-            left: 50%;
-            top: 50%;
-            will-change: transform;
+            left: 50%; top: 50%;
+            /* Pitches the map backward to give depth */
+            transform: rotateX(50deg) scale(1.4);
+            transform-style: preserve-3d;
+            width: 0; height: 0; /* Centered origin point */
         }
 
         #background {
             position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none;
+            left: 0; top: 0;
+            width: 4092px; height: 6120px;
+            background-image: url('background.png');
+            background-size: 100% 100%;
+            transform-origin: 0 0;
+            /* Added smooth transitions for non-linear bumps */
+            will-change: transform;
         }
 
-        #footprints-layer {
+        /* UI Elements */
+        .map-label {
             position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            color: #492210;
+            font-size: 45px;
+            font-weight: bold;
+            text-shadow: 2px 2px 0px #f5dbbc, -2px -2px 0px #f5dbbc, 2px -2px 0px #f5dbbc, -2px 2px 0px #f5dbbc;
             pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            white-space: nowrap;
+            z-index: 5;
         }
 
-        /* Footprint Animations */
         .footprint {
             position: absolute;
-            width: 80px;
-            height: 160px;
-            transform-origin: center center;
-            filter: drop-shadow(0px 0px 5px rgba(255,255,255,0.9));
-        }
-
-        .footprint-svg {
-            width: 100%;
-            height: 100%;
+            width: 25px; height: 50px;
             opacity: 0;
-            animation: footprintFade 20s forwards;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            animation: footstep 4s forwards;
+            filter: drop-shadow(2px 2px 0px #f5dbbc);
+            transform-origin: center center;
+            z-index: 2;
         }
 
-        @keyframes footprintFade {
-            0% { opacity: 0; transform: scale(0.8); }
-            5% { opacity: 0.8; transform: scale(1); }
-            80% { opacity: 0.8; }
+        @keyframes footstep {
+            0% { opacity: 0; transform: scale(0.8) translateY(10px); }
+            15% { opacity: 0.85; transform: scale(1) translateY(0); }
+            70% { opacity: 0.85; }
             100% { opacity: 0; }
         }
 
-        /* Wrong Way Message */
-        #wrong-way-msg {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(60, 36, 21, 0.9);
-            color: #e9dfce;
-            padding: 15px 25px;
-            border-radius: 8px;
-            border: 2px solid #2a180c;
-            font-size: 20px;
-            opacity: 0;
-            transition: opacity 0.5s;
-            z-index: 2000;
-            pointer-events: none;
-            width: 80%;
-            max-width: 320px;
-            text-align: center;
+        #arrow {
+            position: absolute;
+            width: 50px; height: 50px;
+            filter: drop-shadow(2px 2px 0px #f5dbbc);
+            margin-left: -25px; margin-top: -25px;
+            z-index: 10;
+            transition: left 0.1s linear, top 0.1s linear;
         }
 
-        .show-wrong-way #wrong-way-msg {
-            opacity: 1;
+        #toast {
+            position: absolute;
+            bottom: -80px; left: 50%;
+            transform: translateX(-50%);
+            background: #492210;
+            color: #f0cfa6;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 22px;
+            font-weight: bold;
+            transition: bottom 0.4s ease;
+            z-index: 20;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            pointer-events: none;
+        }
+        #toast.show { bottom: 50px; }
+
+        #start-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(240, 207, 166, 0.95);
+            display: flex; justify-content: center; align-items: center;
+            font-size: 32px; color: #492210; font-weight: bold;
+            z-index: 100; cursor: pointer; text-align: center; padding: 20px;
+            box-sizing: border-box;
         }
     </style>
 </head>
 <body>
 
-    <div id="loading">
-        <div id="loading-text">I solemnly swear that I am up to no good.</div>
-        <button id="start-btn">Reveal Map</button>
+    <div id="start-screen" onclick="startApp()">
+        I solemnly swear that I am up to no good.<br><br>
+        <span style="font-size: 20px;">(Tap to Start GPS Tracking)</span>
     </div>
 
-    <div id="flame-border"></div>
-
-    <div id="arrow-container">
-        <div id="arrow"></div>
-    </div>
-
-    <div class="pitch-container">
-        <div class="map-wrapper">
-            <div id="map-container">
-                <img id="background" src="background.png" alt="Map Background">
-                <div id="footprints-layer"></div>
-            </div>
+    <div id="map-container">
+        <div id="map-layer">
+            <div id="background"></div>
         </div>
     </div>
 
-    <div id="wrong-way-msg">You're facing the wrong way, head up!</div>
+    <!-- UI Overlay Layer -->
+    <div id="arrow">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+            <path fill="#492210" d="M50,10 L85,85 L50,65 L15,85 Z" />
+        </svg>
+    </div>
+    
+    <div id="toast">Wrong Way</div>
 
     <script>
-        // Setup state variables
-        const EARTH_RADIUS = 6378137; // in meters
-        const SCALE = 45; // Map scale: 1 real-world meter = 45 pixels
-        const STEP_DISTANCE = 20; // Drop a footprint every 20 map-pixels
-
-        // Destination map coordinates
+        // System Config
+        const INITIAL_X = 2062;
+        const INITIAL_Y = 3364;
         const DEST_X = 1655;
         const DEST_Y = 1252;
-        let isWrongWay = false;
+        const PIXELS_PER_METER = 45;
 
-        let startLat = null, startLon = null;
-        
-        let targetEast = 0, targetNorth = 0;
-        let visualEast = 0, visualNorth = 0;
-        
-        // Initial defaults (Facing East)
-        let targetHeading = 90;
-        let visualHeading = 90;
+        // Coordinates & Tracking
+        let target_map_x = INITIAL_X;
+        let target_map_y = INITIAL_Y;
+        let map_x = INITIAL_X;
+        let map_y = INITIAL_Y;
 
-        let lastCalcE, lastCalcN;
-        let lastStepX = 2062, lastStepY = 3364;
+        let firstPos = null;
+        let gpsHistory = [];
+        let distHistory =[];
+        let lastDistTime = 0;
+
+        // Footprint state
+        let last_footprint_x = INITIAL_X;
+        let last_footprint_y = INITIAL_Y;
         let isLeftFoot = true;
 
-        // Linear interpolation helpers
-        function lerp(start, end, factor) {
-            return start + (end - start) * factor;
-        }
+        // Labels definitions
+        const labelData =[
+            { name: "Manor", x: 2022, y: 3336 },
+            { name: "Garden", x: 1302, y: 4464 },
+            { name: "Great Hall", x: 1476, y: 4438 },
+            { name: "Road", x: 2070, y: 5232 },
+            { name: "The Hill", x: 1374, y: 3390 },
+            { name: "Back Grounds", x: 2202, y: 2634 },
+            { name: "Forbidden Forest", x: 1428, y: 1974 },
+            { name: "Hippogriff Enclosure", x: 1206, y: 2220 },
+            { name: "Stomping Yard", x: 1392, y: 1302 }
+        ];
 
-        // Safely adjust target heading to avoid CSS spin wrapping
-        function updateTargetHeading(newHeading) {
-            let diff = newHeading - targetHeading;
-            while (diff <= -180) diff += 360;
-            while (diff > 180) diff -= 360;
-            targetHeading += diff;
-        }
+        let labels = labelData.map((l, i) => ({
+            id: 'label-' + i, name: l.name,
+            targetX: l.x, targetY: l.y,
+            x: l.x, y: l.y, vx: 0, vy: 0
+        }));
 
-        function onPositionUpdate(position) {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            
-            // Set initial origin 
-            if (startLat === null) {
-                startLat = lat;
-                startLon = lon;
-                document.getElementById('loading').style.display = 'none';
-                requestAnimationFrame(updateVisuals);
-            }
-            
-            // Calculate movement mapped to ENU (East/North/Up)
-            const dLat = lat - startLat;
-            const dLon = lon - startLon;
-            
-            targetNorth = dLat * (Math.PI / 180) * EARTH_RADIUS;
-            targetEast = dLon * (Math.PI / 180) * EARTH_RADIUS * Math.cos(startLat * Math.PI / 180);
-            
-            // Derive smooth heading
-            if (position.coords.heading !== null && !isNaN(position.coords.heading)) {
-                updateTargetHeading(position.coords.heading);
-            } else {
-                if (lastCalcE !== undefined) {
-                    const dE = targetEast - lastCalcE;
-                    const dN = targetNorth - lastCalcN;
-                    if (Math.hypot(dE, dN) > 0.5) { // Ensure minimum dist of 0.5m
-                        let calcHeading = Math.atan2(dE, dN) * 180 / Math.PI;
-                        if (calcHeading < 0) calcHeading += 360;
-                        updateTargetHeading(calcHeading);
-                        lastCalcE = targetEast;
-                        lastCalcN = targetNorth;
-                    }
-                } else {
-                    lastCalcE = targetEast;
-                    lastCalcN = targetNorth;
-                }
-            }
-        }
+        function startApp() {
+            document.getElementById('start-screen').style.display = 'none';
+            initMap();
 
-        function dropFootprint(x, y, travelAngleRad) {
-            const layer = document.getElementById('footprints-layer');
-            const footprint = document.createElement('div');
-            footprint.className = 'footprint';
-            
-            // Calculate perp offset for left and right shoe prints
-            const perpAngle = travelAngleRad + Math.PI / 2;
-            const offsetDist = isLeftFoot ? -8 : 8;
-            
-            const ox = Math.cos(perpAngle) * offsetDist;
-            const oy = Math.sin(perpAngle) * offsetDist;
-            
-            footprint.style.left = (x + ox) + 'px';
-            footprint.style.top = (y + oy) + 'px';
-            
-            // Make SVG point towards travel
-            const rotDeg = travelAngleRad * 180 / Math.PI + 90;
-            const scaleX = isLeftFoot ? -1 : 1; 
-            
-            footprint.style.transform = `translate(-50%, -50%) rotate(${rotDeg}deg) scaleX(${scaleX})`;
-            
-            const svgWrap = document.createElement('div');
-            svgWrap.className = 'footprint-svg';
-            svgWrap.innerHTML = `
-                <svg width="15" height="30" viewBox="0 0 20 40">
-                  <!-- Classic shoe shape -->
-                  <path d="M10,38 C6,38 4,33 5,29 C6,25 9,23 12,24 C15,25 16,30 14,34 C13,37 12,38 10,38 Z" fill="#4a3123"/>
-                  <path d="M12,21 C7,22 3,18 2,13 C1,8 3,3 6,1 C9,-1 14,0 16,4 C18,8 17,20 12,21 Z" fill="#4a3123"/>
-                </svg>
-            `;
-            
-            footprint.appendChild(svgWrap);
-            layer.appendChild(footprint);
-            
-            isLeftFoot = !isLeftFoot;
-            
-            // Cleanup DOM
-            setTimeout(() => { footprint.remove(); }, 20000);
-        }
-
-        function updateArrow() {
-            // Find map coordinates of current position
-            const currentMapX = 2062 - (targetNorth * SCALE);
-            const currentMapY = 3364 - (targetEast * SCALE);
-            
-            // Arrow points towards DEST_X (1655) and DEST_Y (1252)
-            const destDiffX = currentMapX - DEST_X; // + means dest is above
-            const destDiffY = currentMapY - DEST_Y; // + means dest is left
-            
-            // Re-calculate bearing from X/Y mapping
-            // Map: North corresponds to -X, East corresponds to -Y.
-            const dNorth = currentMapX - DEST_X; 
-            const dEast = currentMapY - DEST_Y;
-            
-            let bearingToDest = Math.atan2(dEast, dNorth) * 180 / Math.PI;
-            if (bearingToDest < 0) bearingToDest += 360;
-            
-            let relativeAngle = bearingToDest;
-            // Normalize relativeAngle to -180 to 180
-            while (relativeAngle <= -180) relativeAngle += 360;
-            while (relativeAngle > 180) relativeAngle -= 360;
-            
-            const relRad = relativeAngle * Math.PI / 180;
-            
-            // Wrong way threshold logic
-            const absRelAngle = Math.abs(relativeAngle);
-            if (absRelAngle > 135) { // Threshold to turn ON wrong way message
-                if (!isWrongWay) {
-                    isWrongWay = true;
-                    document.body.classList.add('show-wrong-way');
-                }
-            } else if (absRelAngle < 100) { // Threshold to turn OFF wrong way message
-                if (isWrongWay) {
-                    isWrongWay = false;
-                    document.body.classList.remove('show-wrong-way');
-                }
-            }
-            
-            // Calculate arrow intersection at the edge of the screen
-            const padding = 50;
-            const w = window.innerWidth / 2 - padding;
-            const h = window.innerHeight / 2 - padding;
-            
-            let dirX = Math.sin(relRad);
-            let dirY = -Math.cos(relRad);
-            
-            let boxScale = Math.min(
-                Math.abs(dirX) > 0.001 ? Math.abs(w / dirX) : Infinity,
-                Math.abs(dirY) > 0.001 ? Math.abs(h / dirY) : Infinity
-            );
-            
-            const arrowElement = document.getElementById('arrow');
-            arrowElement.style.transform = `translate(${dirX * boxScale}px, ${dirY * boxScale}px) rotate(${relativeAngle}deg)`;
-        }
-
-        function updateVisuals() {
-            // Smooth values
-            visualEast = lerp(visualEast, targetEast, 0.2);
-            visualNorth = lerp(visualNorth, targetNorth, 0.2);
-            visualHeading = lerp(visualHeading, targetHeading, 0.2);
-            
-            // Coordinates translation mappings:
-            // Since East is Top, map Y updates on East shift. North is Left, map X updates on North shift.
-            const mapX = 2062 - (visualNorth * SCALE);
-            const mapY = 3364 - (visualEast * SCALE);
-            
-            const container = document.getElementById('map-container');
-            // Offset logic moves exact center point under crosshairs and rotates on it.
-            container.style.transformOrigin = `${mapX}px ${mapY}px`;
-            // Add map rotation into the transform based on visualHeading
-            container.style.transform = `translate(${-mapX}px, ${-mapY}px) rotate(${visualHeading - 90}deg)`;
-            
-            let distFromLast = Math.hypot(mapX - lastStepX, mapY - lastStepY);
-            if (distFromLast > STEP_DISTANCE) {
-                // Correct heading alignment onto background image axis
-                const travelAngleRad = (visualHeading - 180) * Math.PI / 180;
-                dropFootprint(mapX, mapY, travelAngleRad);
-                lastStepX = mapX;
-                lastStepY = mapY;
-            }
-            
-            updateArrow();
-            requestAnimationFrame(updateVisuals);
-        }
-
-        // Initialize App
-        document.getElementById('start-btn').addEventListener('click', () => {
             if (navigator.geolocation) {
-                document.getElementById('loading-text').innerText = "Locating Map Origins...";
-                document.getElementById('start-btn').style.display = 'none';
+                navigator.geolocation.watchPosition(
+                    pos => {
+                        let lat = pos.coords.latitude;
+                        let lon = pos.coords.longitude;
+                        if (!firstPos) firstPos = { lat, lon };
 
-                navigator.geolocation.watchPosition(onPositionUpdate, (err) => {
-                    console.error(err);
-                    alert("Error communicating with GPS. Please enable location services.");
-                }, {
-                    enableHighAccuracy: true,
-                    maximumAge: 0,
-                    timeout: 5000
-                });
-            } else {
-                alert("Geolocation is not supported by your browser.");
+                        // Deltas in degrees mapping to meters
+                        let dLat = lat - firstPos.lat;
+                        let dLon = lon - firstPos.lon;
+
+                        let dy_meters = dLon * 111320 * Math.cos(firstPos.lat * Math.PI / 180); // East
+                        let dx_meters = dLat * 111320; // North
+                        
+                        // Top of screen is East, Left of screen is North
+                        let new_target_x = INITIAL_X - (dx_meters * PIXELS_PER_METER); 
+                        let new_target_y = INITIAL_Y - (dy_meters * PIXELS_PER_METER); 
+
+                        // Accumulate and average GPS to prevent jitter
+                        gpsHistory.push({ x: new_target_x, y: new_target_y });
+                        if (gpsHistory.length > 5) gpsHistory.shift();
+
+                        target_map_x = gpsHistory.reduce((s, p) => s + p.x, 0) / gpsHistory.length;
+                        target_map_y = gpsHistory.reduce((s, p) => s + p.y, 0) / gpsHistory.length;
+                    },
+                    err => console.warn(err),
+                    { enableHighAccuracy: true, maximumAge: 1000, timeout: 5000 }
+                );
             }
-        });
+            
+            // Fallback bindings for Desktop testing
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowUp') target_map_y -= 50;   // Walk East
+                if (e.key === 'ArrowDown') target_map_y += 50; // Walk West
+                if (e.key === 'ArrowLeft') target_map_x -= 50; // Walk North
+                if (e.key === 'ArrowRight') target_map_x += 50;// Walk South
+                gpsHistory.push({ x: target_map_x, y: target_map_y });
+                if (gpsHistory.length > 5) gpsHistory.shift();
+            });
+
+            requestAnimationFrame(updateFrame);
+        }
+
+        function initMap() {
+            let bg = document.getElementById('background');
+
+            // Draw Destination marker on background
+            let destMarker = document.createElement('div');
+            destMarker.style.cssText = `position: absolute; left: ${DEST_X}px; top: ${DEST_Y}px; color: #492210; font-size: 80px; transform: translate(-50%, -50%); text-shadow: 2px 2px 0px #f5dbbc, -2px -2px 0px #f5dbbc; z-index: 1;`;
+            destMarker.textContent = 'X';
+            bg.appendChild(destMarker);
+
+            // Setup Labels
+            labels.forEach(l => {
+                let el = document.createElement('div');
+                el.className = 'map-label';
+                el.id = l.id;
+                el.textContent = l.name;
+                bg.appendChild(el);
+            });
+        }
+
+        function updateFrame(time) {
+            // 1. Smooth Camera Glide
+            map_x += (target_map_x - map_x) * 0.05;
+            map_y += (target_map_y - map_y) * 0.05;
+            
+            document.getElementById('background').style.transform = `translate(${-map_x}px, ${-map_y}px)`;
+            
+            // 2. Footprint Spawning
+            let distWalked = Math.hypot(map_x - last_footprint_x, map_y - last_footprint_y);
+            if (distWalked > 30) {
+                let angle = Math.atan2(map_y - last_footprint_y, map_x - last_footprint_x);
+                // Offset left or right foot relative to path
+                let offsetX = Math.cos(angle + Math.PI/2) * (isLeftFoot ? -12 : 12);
+                let offsetY = Math.sin(angle + Math.PI/2) * (isLeftFoot ? -12 : 12);
+                
+                spawnFootprint(map_x + offsetX, map_y + offsetY, angle);
+                
+                last_footprint_x = map_x;
+                last_footprint_y = map_y;
+                isLeftFoot = !isLeftFoot;
+            }
+
+            // 3. Label Physics Engine
+            let visibleW = window.innerWidth;
+            let visibleH = window.innerHeight / 0.64; // Compensate for 50deg Pitch
+            let pad = 100;
+
+            labels.forEach(l => {
+                // Spring towards anchor point
+                l.vx += (l.targetX - l.x) * 0.01;
+                l.vy += (l.targetY - l.y) * 0.01;
+
+                // Center Screen Repulsion
+                let distC = Math.hypot(l.x - map_x, l.y - map_y);
+                if (distC < 300) {
+                    let pushUp = 200 * (1 - distC / 300);
+                    l.vy -= pushUp * 0.03; // Smooth push towards Top of map (-Y)
+                    l.vx += (l.x - map_x) * 0.005; 
+                }
+
+                // Overlap (Node) Repulsion
+                labels.forEach(l2 => {
+                    if (l === l2) return;
+                    let dx2 = l.x - l2.x;
+                    let dy2 = l.y - l2.y;
+                    let dist2 = Math.hypot(dx2, dy2);
+                    if (dist2 < 300 && dist2 > 0) {
+                        let force = (300 - dist2) * 0.01;
+                        l.vx += (dx2 / dist2) * force;
+                        l.vy += (dy2 / dist2) * force;
+                    }
+                });
+
+                // Screen Padding Repulsion (only for those expected to be onscreen)
+                let isTargetVisible = Math.abs(l.targetX - map_x) < visibleW/2 && Math.abs(l.targetY - map_y) < visibleH/2;
+                if (isTargetVisible) {
+                    let leftEdge = map_x - visibleW/2 + pad;
+                    let rightEdge = map_x + visibleW/2 - pad;
+                    let topEdge = map_y - visibleH/2 + pad;
+                    let bottomEdge = map_y + visibleH/2 - pad;
+
+                    if (l.x < leftEdge) l.vx += (leftEdge - l.x) * 0.05;
+                    if (l.x > rightEdge) l.vx -= (l.x - rightEdge) * 0.05;
+                    if (l.y < topEdge) l.vy += (topEdge - l.y) * 0.05;
+                    if (l.y > bottomEdge) l.vy -= (l.y - bottomEdge) * 0.05;
+                }
+
+                // Apply Friction & Speed
+                l.vx *= 0.8; l.vy *= 0.8;
+                l.x += l.vx; l.y += l.vy;
+
+                // Visibility Threshold (anti-flicker managed by CSS transition)
+                let el = document.getElementById(l.id);
+                el.style.transform = `translate(-50%, -50%) translate(${l.x}px, ${l.y}px)`;
+                if (Math.abs(l.x - map_x) < visibleW/2 + 200 && Math.abs(l.y - map_y) < visibleH/2 + 200) {
+                    el.style.opacity = 1;
+                } else {
+                    el.style.opacity = 0;
+                }
+            });
+
+            // 4. Arrow Navigation
+            let arrow = document.getElementById('arrow');
+            let dX = DEST_X - map_x;
+            let dY = DEST_Y - map_y;
+            let angle = Math.atan2(dY * 0.64, dX); // 0.64 compensates for Y compression
+            
+            let arrW = window.innerWidth / 2 - 50;
+            let arrH = window.innerHeight / 2 - 50;
+
+            let absCos = Math.abs(Math.cos(angle));
+            let absSin = Math.abs(Math.sin(angle));
+            let mag = Math.min(arrW / absCos, arrH / absSin);
+
+            // Screen intersection (1.4 is our map layer scale)
+            let screenDx = dX * 1.4;
+            let screenDy = dY * 1.4 * 0.64;
+
+            if (Math.abs(screenDx) < arrW && Math.abs(screenDy) < arrH) {
+                arrow.style.left = `calc(50% + ${screenDx}px)`;
+                arrow.style.top = `calc(50% + ${screenDy}px)`;
+            } else {
+                arrow.style.left = `calc(50% + ${Math.cos(angle) * mag}px)`;
+                arrow.style.top = `calc(50% + ${Math.sin(angle) * mag}px)`;
+            }
+
+            let arrowDeg = angle * 180 / Math.PI + 90;
+            arrow.style.transform = `rotate(${arrowDeg}deg)`;
+
+            // 5. Wrong Way Toast Logic
+            if (time - lastDistTime > 1000) {
+                let currentDist = Math.hypot(DEST_X - map_x, DEST_Y - map_y);
+                distHistory.push(currentDist);
+                if (distHistory.length > 5) distHistory.shift();
+
+                let toast = document.getElementById('toast');
+                if (currentDist > 300 && distHistory.length === 5) {
+                    let oldestDist = distHistory[0];
+                    if (currentDist > oldestDist + 10) {
+                        toast.classList.add('show');
+                    } else if (currentDist < oldestDist - 10) {
+                        toast.classList.remove('show');
+                    }
+                } else if (currentDist <= 300) {
+                    toast.classList.remove('show');
+                }
+                lastDistTime = time;
+            }
+
+            requestAnimationFrame(updateFrame);
+        }
+
+        function spawnFootprint(x, y, angle) {
+            let fp = document.createElement('div');
+            fp.className = 'footprint';
+            fp.style.left = `${x}px`;
+            fp.style.top = `${y}px`;
+            
+            let deg = angle * 180 / Math.PI + 90;
+            let scaleX = isLeftFoot ? 1 : -1;
+            fp.style.transform = `translate(-50%, -50%) rotate(${deg}deg)`;
+            
+            // Asymmetrical shoe print design
+            fp.innerHTML = `
+                <svg viewBox="0 0 24 55" style="width:100%; height:100%; transform: scaleX(${scaleX});">
+                    <path fill="#492210" d="M14,3 C8,2 3,10 5,22 C6,28 14,30 18,24 C22,14 20,4 14,3 Z M12,35 C8,35 6,42 8,48 C10,53 14,53 16,48 C18,42 16,35 12,35 Z" />
+                </svg>`;
+            
+            document.getElementById('background').appendChild(fp);
+            setTimeout(() => { if (fp.parentNode) fp.remove(); }, 4000);
+        }
     </script>
 </body>
 </html>
