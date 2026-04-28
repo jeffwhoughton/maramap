@@ -32,7 +32,7 @@
             position: absolute;
             left: 50%; top: 50%;
             /* Pitches the map backward to give depth */
-            transform: rotateX(50deg) scale(1.4);
+            transform: rotateX(40deg) scale(0.7);
             transform-style: preserve-3d;
             width: 0; height: 0; /* Centered origin point */
         }
@@ -54,7 +54,7 @@
             color: #492210;
             font-size: 45px;
             font-weight: bold;
-            text-shadow: 2px 2px 0px #f5dbbc, -2px -2px 0px #f5dbbc, 2px -2px 0px #f5dbbc, -2px 2px 0px #f5dbbc;
+            text-shadow: 2px 2px 6px #f5dbbc, -2px -2px 6px #f5dbbc, 2px -2px 6px #f5dbbc, -2px 2px 6px #f5dbbc;
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.5s ease;
@@ -66,23 +66,26 @@
             position: absolute;
             width: 25px; height: 50px;
             opacity: 0;
-            animation: footstep 4s forwards;
-            filter: drop-shadow(2px 2px 0px #f5dbbc);
+            filter: drop-shadow(2px 2px 6px #f5dbbc);
             transform-origin: center center;
+            transition: opacity 0.5s ease, transform 0.5s ease;
             z-index: 2;
+        }
+
+        .footprint-inner {
+            width: 100%; height: 100%;
+            animation: footstep 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
 
         @keyframes footstep {
             0% { opacity: 0; transform: scale(0.8) translateY(10px); }
-            15% { opacity: 0.85; transform: scale(1) translateY(0); }
-            70% { opacity: 0.85; }
-            100% { opacity: 0; }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
         }
 
         #arrow {
             position: absolute;
             width: 50px; height: 50px;
-            filter: drop-shadow(2px 2px 0px #f5dbbc);
+            filter: drop-shadow(2px 2px 6px #f5dbbc);
             margin-left: -25px; margin-top: -25px;
             z-index: 10;
             transition: left 0.1s linear, top 0.1s linear;
@@ -109,18 +112,38 @@
             position: absolute;
             top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(240, 207, 166, 0.95);
-            display: flex; justify-content: center; align-items: center;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
             font-size: 32px; color: #492210; font-weight: bold;
-            z-index: 100; cursor: pointer; text-align: center; padding: 20px;
+            z-index: 100; text-align: center; padding: 20px;
             box-sizing: border-box;
+            gap: 40px;
+        }
+
+        #start-button {
+            background-color: #492210;
+            color: #f0cfa6;
+            border: none;
+            padding: 15px 50px;
+            font-family: 'Cinzel', 'Georgia', serif;
+            font-size: 28px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        
+        #start-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 0 2px rgba(0,0,0,0.3);
         }
     </style>
 </head>
 <body>
 
-    <div id="start-screen" onclick="startApp()">
-        I solemnly swear that I am up to no good.<br><br>
-        <span style="font-size: 20px;">(Tap to Start GPS Tracking)</span>
+    <div id="start-screen">
+        <div>I solemnly swear that I am up to no good.</div>
+        <button id="start-button" onclick="startApp()">START</button>
     </div>
 
     <div id="map-container">
@@ -161,6 +184,7 @@
         let last_footprint_x = INITIAL_X;
         let last_footprint_y = INITIAL_Y;
         let isLeftFoot = true;
+        let activeFootprints = [];
 
         // Labels definitions
         const labelData =[
@@ -233,7 +257,7 @@
 
             // Draw Destination marker on background
             let destMarker = document.createElement('div');
-            destMarker.style.cssText = `position: absolute; left: ${DEST_X}px; top: ${DEST_Y}px; color: #492210; font-size: 80px; transform: translate(-50%, -50%); text-shadow: 2px 2px 0px #f5dbbc, -2px -2px 0px #f5dbbc; z-index: 1;`;
+            destMarker.style.cssText = `position: absolute; left: ${DEST_X}px; top: ${DEST_Y}px; color: #492210; font-size: 80px; transform: translate(-50%, -50%) rotateX(-40deg); text-shadow: 2px 2px 6px #f5dbbc, -2px -2px 6px #f5dbbc; z-index: 1;`;
             destMarker.textContent = 'X';
             bg.appendChild(destMarker);
 
@@ -320,7 +344,8 @@
 
                 // Visibility Threshold (anti-flicker managed by CSS transition)
                 let el = document.getElementById(l.id);
-                el.style.transform = `translate(-50%, -50%) translate(${l.x}px, ${l.y}px)`;
+                // Counter-rotate the label text by -40deg to keep it facing the camera squarely
+                el.style.transform = `translate(-50%, -50%) translate(${l.x}px, ${l.y}px) rotateX(-40deg)`;
                 if (Math.abs(l.x - map_x) < visibleW/2 + 200 && Math.abs(l.y - map_y) < visibleH/2 + 200) {
                     el.style.opacity = 1;
                 } else {
@@ -332,7 +357,7 @@
             let arrow = document.getElementById('arrow');
             let dX = DEST_X - map_x;
             let dY = DEST_Y - map_y;
-            let angle = Math.atan2(dY * 0.64, dX); // 0.64 compensates for Y compression
+            let angle = Math.atan2(dY * 0.76, dX); // 0.76 compensates for 40deg Y compression
             
             let arrW = window.innerWidth / 2 - 50;
             let arrH = window.innerHeight / 2 - 50;
@@ -341,9 +366,9 @@
             let absSin = Math.abs(Math.sin(angle));
             let mag = Math.min(arrW / absCos, arrH / absSin);
 
-            // Screen intersection (1.4 is our map layer scale)
-            let screenDx = dX * 1.4;
-            let screenDy = dY * 1.4 * 0.64;
+            // Screen intersection (0.7 is our map layer scale)
+            let screenDx = dX * 0.7;
+            let screenDy = dY * 0.7 * 0.76;
 
             if (Math.abs(screenDx) < arrW && Math.abs(screenDy) < arrH) {
                 arrow.style.left = `calc(50% + ${screenDx}px)`;
@@ -384,19 +409,42 @@
             fp.className = 'footprint';
             fp.style.left = `${x}px`;
             fp.style.top = `${y}px`;
+            fp.style.opacity = 1;
             
             let deg = angle * 180 / Math.PI + 90;
             let scaleX = isLeftFoot ? 1 : -1;
+            // The footprint rotates to match the path, but does NOT rotate relative to screen afterwards
             fp.style.transform = `translate(-50%, -50%) rotate(${deg}deg)`;
             
-            // Asymmetrical shoe print design
+            // Asymmetrical shoe print design inside footprint-inner to allow entrance animation without overriding transform
             fp.innerHTML = `
-                <svg viewBox="0 0 24 55" style="width:100%; height:100%; transform: scaleX(${scaleX});">
-                    <path fill="#492210" d="M14,3 C8,2 3,10 5,22 C6,28 14,30 18,24 C22,14 20,4 14,3 Z M12,35 C8,35 6,42 8,48 C10,53 14,53 16,48 C18,42 16,35 12,35 Z" />
-                </svg>`;
+                <div class="footprint-inner">
+                    <svg viewBox="0 0 24 55" style="width:100%; height:100%; transform: scaleX(${scaleX});">
+                        <path fill="#492210" d="M14,3 C8,2 3,10 5,22 C6,28 14,30 18,24 C22,14 20,4 14,3 Z M12,35 C8,35 6,42 8,48 C10,53 14,53 16,48 C18,42 16,35 12,35 Z" />
+                    </svg>
+                </div>`;
             
             document.getElementById('background').appendChild(fp);
-            setTimeout(() => { if (fp.parentNode) fp.remove(); }, 4000);
+            activeFootprints.push(fp);
+
+            // Keep only a certain number of footprints
+            const MAX_FOOTPRINTS = 20;
+            // Fade out old footprints
+            activeFootprints.forEach((f, index) => {
+                let age = activeFootprints.length - index;
+                if (age > MAX_FOOTPRINTS - 5) {
+                    let fadeOutRatio = 1 - (age - (MAX_FOOTPRINTS - 5)) * 0.2;
+                    f.style.opacity = Math.max(0, fadeOutRatio);
+                } else {
+                    f.style.opacity = 1;
+                }
+            });
+
+            // Remove very old ones
+            if (activeFootprints.length > MAX_FOOTPRINTS) {
+                let removed = activeFootprints.shift();
+                if (removed.parentNode) removed.remove();
+            }
         }
     </script>
 </body>
