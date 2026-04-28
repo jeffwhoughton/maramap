@@ -41,7 +41,7 @@
             position: absolute;
             left: 0; top: 0;
             width: 4092px; height: 6120px;
-            background-image: url('background.png');
+            background-image: url('background.webp');
             background-size: 100% 100%;
             transform-origin: 0 0;
             /* Added smooth transitions for non-linear bumps */
@@ -91,6 +91,38 @@
             margin-left: -25px; margin-top: -25px;
             z-index: 10;
             transition: left 0.1s linear, top 0.1s linear;
+            pointer-events: none;
+        }
+
+        #arrow svg.arrow-path {
+            animation: expand-arrow 4s infinite ease-in-out;
+            transform-origin: center center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .star {
+            position: absolute;
+            width: 20px; height: 20px;
+            opacity: 0;
+            z-index: 3;
+            animation: twinkle-star 4s infinite ease-in-out;
+            filter: drop-shadow(0 0 3px #ffffff);
+        }
+
+        @keyframes expand-arrow {
+            0% { transform: scale(1); }
+            8% { transform: scale(1.3); }
+            28% { transform: scale(1.3); }
+            40% { transform: scale(1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes twinkle-star {
+            0% { opacity: 0; transform: scale(0) rotate(0deg); }
+            8% { opacity: 1; transform: scale(1.2) rotate(45deg); }
+            20% { opacity: 0; transform: scale(0) rotate(90deg); }
+            100% { opacity: 0; transform: scale(0) rotate(90deg); }
         }
 
         #toast {
@@ -115,7 +147,7 @@
         #start-screen {
             position: absolute;
             top: 0; left: 0; width: 100vw; height: 100vh;
-            background: linear-gradient(rgba(240, 207, 166, 0.9), rgba(240, 207, 166, 0.9)), url('background.png') no-repeat center center;
+            background: linear-gradient(rgba(240, 207, 166, 0.9), rgba(240, 207, 166, 0.9)), url('background.webp') no-repeat center center;
             background-size: cover;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             font-size: 32px; color: #492210; font-weight: bold;
@@ -163,6 +195,7 @@
     </style>
 </head>
 <body>
+    <audio id="bg-music" src="harry.mp3" preload="auto" loop></audio>
 
     <div id="start-screen">
         <div>I solemnly swear that I am up to no good.</div>
@@ -179,7 +212,16 @@
 
     <!-- UI Overlay Layer -->
     <div id="arrow">
-        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+        <div class="star" style="top: 0px; left: 2px; animation-delay: 0s;">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;"><path fill="#ffffff" d="M12 0l2 8 8 2-8 2-2 8-2-8-8-2 8-2z"/></svg>
+        </div>
+        <div class="star" style="top: 20px; right: -5px; animation-delay: 0.2s;">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;"><path fill="#ffffff" d="M12 0l2 8 8 2-8 2-2 8-2-8-8-2 8-2z"/></svg>
+        </div>
+        <div class="star" style="bottom: -2px; left: 20px; animation-delay: 0.4s;">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;"><path fill="#ffffff" d="M12 0l2 8 8 2-8 2-2 8-2-8-8-2 8-2z"/></svg>
+        </div>
+        <svg class="arrow-path" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
             <path fill="#492210" d="M50,10 L85,85 L50,65 L15,85 Z" />
         </svg>
     </div>
@@ -210,6 +252,15 @@
         let last_footprint_y = INITIAL_Y;
         let isLeftFoot = true;
         let activeFootprints = [];
+        let arrowOffsetX = 0;
+
+        function attemptPlayAudio() {
+            let bgMusic = document.getElementById('bg-music');
+            if (bgMusic) {
+                bgMusic.volume = 0.5; // Default volume
+                bgMusic.play().catch(e => console.warn('Audio playback failed:', e));
+            }
+        }
 
         // Labels definitions
         const labelData =[
@@ -218,7 +269,7 @@
             { name: "Great Hall", x: 2466, y: 4200 },
             { name: "The Lane", x: 2070, y: 5232 },
             { name: "Crest Hill", x: 2802, y: 3390 },
-            { name: "Outer Grounds", x: 2202, y: 2734 },
+            { name: "Outer Grounds", x: 2302, y: 2734 },
             { name: "Forbidden Forest", x: 2376, y: 1770 },
             { name: "Hippogriff Paddock", x: 1324, y: 2582 },
             { name: "Centaur Glade", x: 1298, y: 1056 }
@@ -232,6 +283,7 @@
 
         function startTestApp() {
             document.getElementById('start-screen').style.display = 'none';
+            attemptPlayAudio();
             initMap();
 
             // Waypoints: West -> South -> Zig-zag to Destination
@@ -291,6 +343,7 @@
 
         function startApp() {
             document.getElementById('start-screen').style.display = 'none';
+            attemptPlayAudio();
             initMap();
 
             if (navigator.geolocation) {
@@ -340,11 +393,26 @@
             let bg = document.getElementById('background');
             let uiLayer = document.getElementById('ui-layer');
 
-            // Draw Destination marker on background
+            // Draw Destination marker on map-layer so it locks perfectly with camera perspective
             let destMarker = document.createElement('div');
-            destMarker.style.cssText = `position: absolute; left: ${DEST_X}px; top: ${DEST_Y}px; color: #492210; font-size: 80px; transform: translate(-50%, -50%) rotateX(-40deg); text-shadow: 2px 2px 6px #f5dbbc, -2px -2px 6px #f5dbbc; z-index: 1;`;
-            destMarker.textContent = '✖';
-            bg.appendChild(destMarker);
+            destMarker.id = 'dest-marker';
+            // Scale up slightly since map-layer is visually scaled by 0.55
+            destMarker.style.cssText = `position: absolute; top:0; left:0; width:72px; height:72px; display:flex; justify-content:center; align-items:center; color: #492210; font-size: 64px; text-shadow: 3px 3px 10px #f5dbbc, -3px -3px 10px #f5dbbc; z-index: 10;`;
+            destMarker.innerHTML = `
+                <div class="dest-stars" style="position: absolute; top:0; left:0; width:100%; height:100%; opacity:0; transition: opacity 0.3s ease; pointer-events:none; z-index: 12;">
+                    <div class="star" style="top: -8px; left: -8px; width: 36px; height: 36px; animation-delay: 0s;">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;"><path fill="#ffffff" d="M12 0l2 8 8 2-8 2-2 8-2-8-8-2 8-2z"/></svg>
+                    </div>
+                    <div class="star" style="top: 27px; right: -8px; width: 36px; height: 36px; animation-delay: 0.2s;">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;"><path fill="#ffffff" d="M12 0l2 8 8 2-8 2-2 8-2-8-8-2 8-2z"/></svg>
+                    </div>
+                    <div class="star" style="bottom: -8px; left: 18px; width: 36px; height: 36px; animation-delay: 0.4s;">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;"><path fill="#ffffff" d="M12 0l2 8 8 2-8 2-2 8-2-8-8-2 8-2z"/></svg>
+                    </div>
+                </div>
+                <div class="dest-icon" style="position: relative; z-index: 11; font-weight: bold; line-height:1;">✖</div>
+            `;
+            document.getElementById('background').appendChild(destMarker);
 
             // Setup Labels in UI tracking layer
             labels.forEach(l => {
@@ -405,20 +473,27 @@
 
                 // Distance fade
                 let distToCenter = Math.hypot(l.x - map_x, l.y - map_y);
+                let alpha = 0;
                 if (distToCenter < 1000) {
-                    let alpha = Math.min(1.0, (1000 - distToCenter) / 400); 
+                    alpha = Math.min(1.0, (1000 - distToCenter) / 400); 
                     el.style.opacity = alpha;
                 } else {
                     el.style.opacity = 0;
                 }
+                
+                l.clampedX = clampedX;
+                l.clampedY = clampedY;
+                l.hw = hw;
+                l.hh = hh;
+                l.alpha = alpha;
             });
 
             // 4. Arrow Navigation
             let arrow = document.getElementById('arrow');
             
-            // Offset the destination specifically for the arrow's targeting logic (down 100 pixels)
+            // Arrow's targeting logic
             let ARROW_DEST_X = DEST_X;
-            let ARROW_DEST_Y = DEST_Y + 150;
+            let ARROW_DEST_Y = DEST_Y;
 
             let dX = ARROW_DEST_X - map_x;
             let dY = ARROW_DEST_Y - map_y;
@@ -438,20 +513,65 @@
 
             // Distance from center is capped at the edge.
             // If the target comes on screen, the arrow moves inward towards it.
-            // We subtract a little bit so the arrow's tip points right at the X instead of overlapping its center.
-            let renderMag = Math.min(edgeMag, Math.max(0, targetMag - 30));
+            // We subtract enough from the target magnitude so the arrow hits the edge of the X instead of overlapping its center.
+            let renderMag = Math.min(edgeMag, Math.max(0, targetMag - 50));
 
-            arrow.style.left = `calc(50% + ${Math.cos(angle) * renderMag}px)`;
-            arrow.style.top = `calc(50% + ${Math.sin(angle) * renderMag}px)`;
+            let baseArrowX = visibleW / 2 + Math.cos(angle) * renderMag;
+            let baseArrowY = visibleH / 2 + Math.sin(angle) * renderMag;
+
+            // Avoid text labels
+            let targetOffsetX = 0;
+            // Radius of 25px gives less visual overlap (15px remaining) instead of sinking to the text rim
+            let arrowRadius = 25; 
+            labels.forEach(l => {
+                if (l.alpha > 0.1) {
+                    let dx = baseArrowX + targetOffsetX - l.clampedX;
+                    let dy = baseArrowY - l.clampedY;
+                    let adx = Math.abs(dx);
+                    let ady = Math.abs(dy);
+                    
+                    if (adx < l.hw + arrowRadius && ady < l.hh + arrowRadius) {
+                        // Push horizontally
+                        if (dx >= 0) {
+                            targetOffsetX += (l.hw + arrowRadius - dx);
+                        } else {
+                            targetOffsetX -= (l.hw + arrowRadius - adx);
+                        }
+                    }
+                }
+            });
+            
+            // Reduced steering speed so it glances outward gracefully and slowly
+            arrowOffsetX += (targetOffsetX - arrowOffsetX) * 0.04;
+
+            arrow.style.left = `calc(${baseArrowX + arrowOffsetX}px)`;
+            arrow.style.top = `calc(${baseArrowY}px)`;
 
             let arrowDeg = angle * 180 / Math.PI + 90;
             arrow.style.transform = `rotate(${arrowDeg}deg)`;
 
             // Fade out as destination gets closer to the center of the screen
+            // Mapped to fade rapidly over the last half: goes from 1.0 down to 0 at 50%
+            let arrowOpacity = 1;
             if (targetMag < 250) {
-                arrow.style.opacity = Math.max(0, targetMag / 250);
-            } else {
-                arrow.style.opacity = 1;
+                arrowOpacity = Math.max(0, (targetMag - 125) / 125);
+            }
+            arrow.style.opacity = arrowOpacity;
+
+            // X Marker Screen Mapping & Stars Logic
+            let destMarker = document.getElementById('dest-marker');
+            if (destMarker) {
+                // Translated inside the 3D map layer, counter-rotated to remain fully 2D and readable,
+                // floated slightly to avoid clipping through the flat map background.
+                destMarker.style.transform = `translate(${DEST_X}px, ${DEST_Y}px) translate(-50%, -50%) rotateX(-40deg) translateZ(10px)`;
+
+                // Uncover X's stars only when the arrow is highly faded (opacity < 0.25 is 75% invisible)
+                let destStars = destMarker.querySelector('.dest-stars');
+                if (arrowOpacity < 0.25) {
+                    destStars.style.opacity = 1;
+                } else {
+                    destStars.style.opacity = 0;
+                }
             }
 
             // 5. Wrong Way Toast Logic
