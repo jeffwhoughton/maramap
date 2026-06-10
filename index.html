@@ -40,7 +40,7 @@
         #background {
             position: absolute;
             left: 0; top: 0;
-            width: 4092px; height: 6120px;
+            width: 4092px; height: 7016px;
             background-image: url('background.webp');
             background-size: 100% 100%;
             transform-origin: 0 0;
@@ -66,7 +66,7 @@
 
         .footprint {
             position: absolute;
-            width: 15px; height: 30px;
+            width: 20px; height: 40px;
             opacity: 0;
             filter: drop-shadow(2px 2px 6px #f5dbbc);
             transform-origin: center center;
@@ -86,9 +86,9 @@
 
         #arrow {
             position: absolute;
-            width: 50px; height: 50px;
+            width: 60px; height: 60px;
             filter: drop-shadow(2px 2px 6px #f5dbbc);
-            margin-left: -25px; margin-top: -25px;
+            margin-left: -30px; margin-top: -30px;
             z-index: 10;
             transition: left 0.1s linear, top 0.1s linear;
             pointer-events: none;
@@ -129,7 +129,7 @@
             position: absolute;
             bottom: -150px; left: 50%;
             transform: translateX(-50%);
-            background: #492210;
+            background: #543e5b;
             color: #f0cfa6;
             padding: 15px 40px;
             border-radius: 30px;
@@ -222,7 +222,7 @@
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;"><path fill="#ffffff" d="M12 0l2 8 8 2-8 2-2 8-2-8-8-2 8-2z"/></svg>
         </div>
         <svg class="arrow-path" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
-            <path fill="#492210" d="M50,10 L85,85 L50,65 L15,85 Z" />
+            <path fill="#543e5b" d="M50,10 L85,85 L50,65 L15,85 Z" />
         </svg>
     </div>
     
@@ -232,9 +232,9 @@
 
     <script>
         // System Config
-        const DEBUG_MODE = false;
+        const DEBUG_MODE = true;
         const INITIAL_X = 2034;
-        const INITIAL_Y = 3720;
+        const INITIAL_Y = 4616;
 
         window.addEventListener('DOMContentLoaded', () => {
             if (!DEBUG_MODE) {
@@ -243,7 +243,7 @@
             }
         });
         const DEST_X = 1655;
-        const DEST_Y = 1252;
+        const DEST_Y = 2148;
         const PIXELS_PER_METER = 45;
 
         // Coordinates & Tracking
@@ -275,15 +275,15 @@
 
         // Labels definitions
         const labelData =[
-            { name: "Old Manor", x: 2022, y: 3336 },
-            { name: "Herb Garden", x: 1644, y: 4464 },
-            { name: "Great Hall", x: 2466, y: 4200 },
-            { name: "The Lane", x: 2070, y: 5232 },
-            { name: "Crest Hill", x: 2802, y: 3390 },
-            { name: "Outer Grounds", x: 2302, y: 2734 },
-            { name: "Forbidden Forest", x: 2376, y: 1770 },
-            { name: "Hippogriff Paddock", x: 1324, y: 2582 },
-            { name: "Centaur Glade", x: 1298, y: 1056 }
+            { name: "Old Manor", x: 2022, y: 4232 },
+            { name: "Herb Garden", x: 1644, y: 5360 },
+            { name: "Great Hall", x: 2466, y: 5096 },
+            { name: "The Lane", x: 2070, y: 6128 },
+            { name: "Crest Hill", x: 2802, y: 4286 },
+            { name: "Outer Grounds", x: 2302, y: 3630 },
+            { name: "Forbidden Forest", x: 2376, y: 2666 },
+            { name: "Hippogriff Paddock", x: 1324, y: 3478 },
+            { name: "Centaur Glade", x: 1298, y: 1952 }
         ];
 
         let labels = labelData.map((l, i) => ({
@@ -304,10 +304,10 @@
                 {x: INITIAL_X, y: INITIAL_Y + 600}, // Walk West (+Y)
                 {x: INITIAL_X + 400, y: INITIAL_Y + 600}, // Walk South (+X)
                 // Zig zags roughly pointing to 1655, 1252
-                {x: 2300, y: 3200}, // Zig
-                {x: 2400, y: 2600}, // Zag
-                {x: 1800, y: 2200}, // Zig
-                {x: 1900, y: 1600}, // Zag
+                {x: 2300, y: 4096}, // Zig
+                {x: 2400, y: 3496}, // Zag
+                {x: 1800, y: 3096}, // Zig
+                {x: 1900, y: 2496}, // Zag
                 {x: DEST_X, y: DEST_Y}  // Destination
             ];
             
@@ -445,7 +445,7 @@
             let destMarker = document.createElement('div');
             destMarker.id = 'dest-marker';
             // Scale up slightly since map-layer is visually scaled by 0.55
-            destMarker.style.cssText = `position: absolute; top:0; left:0; width:72px; height:72px; display:flex; justify-content:center; align-items:center; color: #492210; font-size: 64px; text-shadow: 3px 3px 10px #f5dbbc, -3px -3px 10px #f5dbbc; z-index: 10;`;
+            destMarker.style.cssText = `position: absolute; top:0; left:0; width:72px; height:72px; display:flex; justify-content:center; align-items:center; color: #543e5b; font-size: 64px; text-shadow: 3px 3px 10px #f5dbbc, -3px -3px 10px #f5dbbc; z-index: 10;`;
             destMarker.innerHTML = `
                 <div class="dest-stars" style="position: absolute; top:0; left:0; width:100%; height:100%; opacity:0; transition: opacity 0.3s ease; pointer-events:none; z-index: 12;">
                     <div class="star" style="top: -8px; left: -8px; width: 36px; height: 36px; animation-delay: 0s;">
@@ -663,7 +663,7 @@
             fp.innerHTML = `
                 <div class="footprint-inner">
                     <svg viewBox="0 0 24 55" style="width:100%; height:100%; transform: scaleX(${scaleX});">
-                        <path fill="#492210" d="M14,3 C8,2 3,10 5,22 C6,28 14,30 18,24 C22,14 20,4 14,3 Z M12,35 C8,35 6,42 8,48 C10,53 14,53 16,48 C18,42 16,35 12,35 Z" />
+                        <path fill="#543e5b" d="M14,3 C8,2 3,10 5,22 C6,28 14,30 18,24 C22,14 20,4 14,3 Z M12,35 C8,35 6,42 8,48 C10,53 14,53 16,48 C18,42 16,35 12,35 Z" />
                     </svg>
                 </div>`;
             
